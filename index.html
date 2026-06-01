@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Table Plan</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #eeede9;
+    --text: #1a1a19; --text2: #5f5e5a; --text3: #888780;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --info-bg: #e6f1fb; --info-text: #0c447c; --info-border: #85b7eb;
+    --warn-bg: #faeeda; --warn-text: #633806;
+    --danger-bg: #fcebeb; --danger-text: #a32d2d;
+    --success-bg: #eaf3de; --success-text: #3b6d11;
+    --radius: 8px; --radius-lg: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #2a2a28; --bg3: #333330;
+      --text: #e8e6df; --text2: #a0a09a; --text3: #666660;
+      --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.22);
+      --info-bg: #0c447c; --info-text: #b5d4f4; --info-border: #185fa5;
+      --warn-bg: #633806; --warn-text: #fac775;
+      --danger-bg: #791f1f; --danger-text: #f7c1c1;
+      --success-bg: #27500a; --success-text: #c0dd97;
+    }
+  }
+  body { background: var(--bg3); color: var(--text); padding: 1.5rem; min-height: 100vh; }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 1rem; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px 16px; }
+  .toolbar label { font-size: 13px; color: var(--text2); }
+  .toolbar input[type=number] { width: 52px; text-align: center; padding: 5px 6px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text); font-size: 13px; }
+  .divider { width: 1px; height: 24px; background: var(--border2); margin: 0 2px; }
+  button { padding: 6px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 13px; cursor: pointer; transition: background 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  button:hover { background: var(--bg2); }
+  button.active { background: var(--warn-bg); border-color: var(--warn-text); color: var(--warn-text); }
+  button.danger-active { background: var(--danger-bg); border-color: var(--danger-text); color: var(--danger-text); }
+  .sync-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; padding: 6px 14px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 12px; color: var(--text3); }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; transition: background 0.3s; }
+  .sync-dot.saving { background: #ef9f27; }
+  .sync-dot.saved  { background: #639922; }
+  .sync-dot.error  { background: #e24b4a; }
+  .hint { font-size: 13px; color: var(--text2); padding: 8px 12px; background: var(--bg2); border-radius: var(--radius); margin-bottom: 0.75rem; display: none; }
+  .hint.visible { display: block; }
+  #canvas { position: relative; width: 100%; min-height: 560px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: auto; }
+  #connectorSvg { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
+  .table-group { position: absolute; cursor: grab; }
+  .table-group:active { cursor: grabbing; }
+  .table-group.delete-hover { outline: 2px dashed var(--danger-text); border-radius: 6px; cursor: pointer; }
+  .table-rect { background: var(--bg2); border: 1.5px solid var(--border2); border-radius: 6px; position: absolute; display: flex; align-items: center; justify-content: center; }
+  .table-label { font-size: 11px; font-weight: 500; color: var(--text3); pointer-events: none; }
+  .seat { position: absolute; width: 32px; height: 32px; border-radius: 50%; background: var(--bg); border: 1px solid var(--border2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--text3); text-align: center; line-height: 1.1; transition: background 0.15s; overflow: hidden; }
+  .seat:hover { background: var(--bg2); border-color: var(--text3); }
+  .seat.filled { background: var(--info-bg); border-color: var(--info-border); color: var(--info-text); font-size: 8px; font-weight: 500; }
+  .edge-btn { position: absolute; background: var(--bg2); border: 1px dashed var(--border2); border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.15s; z-index: 10; font-size: 10px; color: var(--text3); }
+  .edge-btn:hover { background: var(--info-bg); border-color: var(--info-border); color: var(--info-text); }
+  .edge-btn.selected { background: var(--warn-bg); border-color: var(--warn-text); color: var(--warn-text); }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 1.5rem; width: 280px; }
+  .modal p { font-weight: 500; margin-bottom: 12px; font-size: 15px; }
+  .modal input { width: 100%; padding: 8px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text); font-size: 14px; margin-bottom: 12px; }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+  @media print {
+    body { padding: 0.5rem; background: white; }
+    .toolbar, .hint, .sync-bar, .edge-btn { display: none !important; }
+    #canvas { border: none; min-height: auto; overflow: visible; }
+  }
+</style>
+</head>
+<body>
+<h1>Wedding Table Plan</h1>
+
+<div class="toolbar">
+  <label>Long sides</label>
+  <input type="number" id="longSeats" min="1" max="10" value="3">
+  <label>Short sides</label>
+  <input type="number" id="shortSeats" min="0" max="6" value="1">
+  <button onclick="addTable()"><i class="ti ti-table"></i> Add table</button>
+  <div class="divider"></div>
+  <button id="attachBtn" onclick="toggleAttach()"><i class="ti ti-link"></i> Link tables</button>
+  <button id="deleteBtn" onclick="toggleDelete()"><i class="ti ti-trash"></i> Delete table</button>
+  <div class="divider"></div>
+  <button onclick="window.print()" style="margin-left:auto;"><i class="ti ti-printer"></i> Print</button>
+</div>
+
+<div class="sync-bar">
+  <div class="sync-dot" id="syncDot"></div>
+  <span id="syncLabel">Loading saved plan…</span>
+  <button onclick="pullState()" style="margin-left:auto; padding:3px 10px; font-size:12px;"><i class="ti ti-refresh"></i> Sync now</button>
+</div>
+
+<div class="hint" id="hint"><span id="hintText"></span></div>
+
+<div id="canvas"><svg id="connectorSvg"></svg></div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <p>Assign guest</p>
+    <input type="text" id="guestInput" placeholder="Name (leave blank to clear)">
+    <div class="modal-btns">
+      <button onclick="closeModal()">Cancel</button>
+      <button onclick="saveGuest()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Constants ────────────────────────────────────────────────────────────────
+const S = 32, GAP = 6, SEP = 8;
+const STORAGE_KEY = 'wedding_table_plan_v1';
+const SYNC_INTERVAL = 30000; // 30s auto-sync
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let tables = [], count = 0, attachMode = false, deleteMode = false;
+let pendingEdge = null, pendingModal = null;
+let saveTimer = null, lastSavedHash = '';
+
+// ─── Table geometry ──────────────────────────────────────────────────────────
+function tableSize(t) {
+  const cols = t.long, rows = Math.max(t.short, 1);
+  const rectW = cols * (S + GAP) - GAP + 2 * SEP;
+  const rectH = rows * (S + GAP) - GAP + 2 * SEP;
+  const rectX = S + SEP;
+  const rectY = (t.short > 0) ? S + SEP : SEP;
+  const totalW = rectX + rectW + S + SEP;
+  const totalH = rectY + rectH + (t.short > 0 ? S + SEP : SEP);
+  return { rectX, rectY, rectW, rectH, totalW, totalH, cols, rows };
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderTable(t) {
+  const old = document.getElementById('tg-' + t.id);
+  if (old) old.remove();
+  const { rectX, rectY, rectW, rectH, totalW, totalH, cols, rows } = tableSize(t);
+  const canvas = document.getElementById('canvas');
+
+  const g = document.createElement('div');
+  g.id = 'tg-' + t.id;
+  g.className = 'table-group' + (deleteMode ? ' delete-hover' : '');
+  g.style.cssText = `left:${t.x}px;top:${t.y}px;width:${totalW}px;height:${totalH}px;`;
+  if (deleteMode) {
+    g.title = 'Click to delete';
+    g.onclick = e => { e.stopPropagation(); deleteTable(t.id); };
+  }
+
+  // Rect
+  const rect = document.createElement('div');
+  rect.className = 'table-rect';
+  rect.style.cssText = `left:${rectX}px;top:${rectY}px;width:${rectW}px;height:${rectH}px;`;
+  const lbl = document.createElement('span');
+  lbl.className = 'table-label';
+  lbl.textContent = 'T' + t.id;
+  rect.appendChild(lbl);
+  g.appendChild(rect);
+
+  // Top seats
+  if (t.short > 0 && !t.links.top)
+    for (let c = 0; c < cols; c++)
+      addSeat(g, t, 'top', c, rectX + SEP + c * (S + GAP), 0);
+
+  // Bottom seats
+  if (t.short > 0 && !t.links.bottom)
+    for (let c = 0; c < cols; c++)
+      addSeat(g, t, 'bottom', c, rectX + SEP + c * (S + GAP), rectY + rectH + SEP);
+
+  // Left seats
+  if (!t.links.left)
+    for (let r = 0; r < rows; r++)
+      addSeat(g, t, 'left', r, 0, rectY + SEP + r * (S + GAP));
+
+  // Right seats
+  if (!t.links.right)
+    for (let r = 0; r < rows; r++)
+      addSeat(g, t, 'right', r, rectX + rectW + SEP, rectY + SEP + r * (S + GAP));
+
+  // Edge buttons (attach mode)
+  if (attachMode) {
+    ['top','bottom','left','right'].forEach(side => {
+      if (t.links[side]) return;
+      const sel = pendingEdge && pendingEdge.tid === t.id && pendingEdge.side === side;
+      const eb = document.createElement('div');
+      eb.className = 'edge-btn' + (sel ? ' selected' : '');
+      const mx = rectX + rectW / 2, my = rectY + rectH / 2;
+      let es = '';
+      if (side === 'top')    es = `left:${mx-12}px;top:${rectY-16}px;width:24px;height:14px;`;
+      if (side === 'bottom') es = `left:${mx-12}px;top:${rectY+rectH+2}px;width:24px;height:14px;`;
+      if (side === 'left')   es = `left:${rectX-16}px;top:${my-12}px;width:14px;height:24px;`;
+      if (side === 'right')  es = `left:${rectX+rectW+2}px;top:${my-12}px;width:14px;height:24px;`;
+      eb.style.cssText = es;
+      eb.innerHTML = '<i class="ti ti-link" style="font-size:10px;"></i>';
+      eb.onclick = e => { e.stopPropagation(); clickEdge(t.id, side); };
+      g.appendChild(eb);
+    });
+  }
+
+  makeDraggable(g, t);
+  canvas.appendChild(g);
+  updateConnectors();
+}
+
+function addSeat(parent, t, side, idx, x, y) {
+  const key = side + '_' + idx;
+  const el = document.createElement('div');
+  el.className = 'seat' + (t.seats[key] ? ' filled' : '');
+  el.style.cssText = `left:${x}px;top:${y}px;`;
+  el.textContent = t.seats[key] || '+';
+  el.title = t.seats[key] || 'Assign guest';
+  el.onclick = e => { e.stopPropagation(); openModal(t.id, key); };
+  parent.appendChild(el);
+}
+
+// ─── Snap ─────────────────────────────────────────────────────────────────────
+function snapTable(t1, side1, t2, side2) {
+  const s1 = tableSize(t1), s2 = tableSize(t2);
+  const r1l = t1.x + s1.rectX, r1t = t1.y + s1.rectY;
+  const r1r = r1l + s1.rectW,  r1b = r1t + s1.rectH;
+  if (side1 === 'right'  && side2 === 'left')   { t2.x = r1r - s2.rectX; t2.y = r1t + s1.rectH/2 - s2.rectY - s2.rectH/2; }
+  if (side1 === 'left'   && side2 === 'right')  { t2.x = r1l - s2.rectX - s2.rectW; t2.y = r1t + s1.rectH/2 - s2.rectY - s2.rectH/2; }
+  if (side1 === 'bottom' && side2 === 'top')    { t2.y = r1b - s2.rectY; t2.x = r1l + s1.rectW/2 - s2.rectX - s2.rectW/2; }
+  if (side1 === 'top'    && side2 === 'bottom') { t2.y = r1t - s2.rectY - s2.rectH; t2.x = r1l + s1.rectW/2 - s2.rectX - s2.rectW/2; }
+  t2.x = Math.max(0, t2.x); t2.y = Math.max(0, t2.y);
+}
+
+// ─── Add / delete ─────────────────────────────────────────────────────────────
+function addTable() {
+  const long  = Math.max(1, parseInt(document.getElementById('longSeats').value) || 2);
+  const short = Math.max(0, parseInt(document.getElementById('shortSeats').value) || 0);
+  const id = ++count;
+  const n = tables.length;
+  const t = { id, long, short, x: 60 + (n%3)*260, y: 60 + Math.floor(n/3)*220, seats: {}, links: {top:false,bottom:false,left:false,right:false}, linkedTo: [] };
+  tables.push(t);
+  renderTable(t);
+  scheduleSave();
+}
+
+function deleteTable(tid) {
+  const t = tables.find(x => x.id === tid);
+  if (t) {
+    t.linkedTo.forEach(l => {
+      const other = tables.find(x => x.id === l.otherId);
+      if (other) { other.links[l.mySide] = false; other.linkedTo = other.linkedTo.filter(x => x.otherId !== tid); renderTable(other); }
+    });
+  }
+  tables = tables.filter(x => x.id !== tid);
+  const el = document.getElementById('tg-' + tid);
+  if (el) el.remove();
+  deleteMode = false;
+  const dBtn = document.getElementById('deleteBtn');
+  dBtn.className = ''; dBtn.innerHTML = '<i class="ti ti-trash"></i> Delete table';
+  setHint('');
+  updateConnectors();
+  scheduleSave();
+}
+
+// ─── Attach ───────────────────────────────────────────────────────────────────
+function setHint(text) {
+  const el = document.getElementById('hint');
+  document.getElementById('hintText').textContent = text;
+  el.className = 'hint' + (text ? ' visible' : '');
+}
+
+function toggleAttach() {
+  attachMode = !attachMode;
+  if (attachMode) { deleteMode = false; document.getElementById('deleteBtn').className = ''; document.getElementById('deleteBtn').innerHTML = '<i class="ti ti-trash"></i> Delete table'; }
+  pendingEdge = null;
+  document.getElementById('attachBtn').className = attachMode ? 'active' : '';
+  document.getElementById('attachBtn').innerHTML = attachMode ? '<i class="ti ti-link-off"></i> Done linking' : '<i class="ti ti-link"></i> Link tables';
+  setHint(attachMode ? 'Click a dashed edge on a table, then click an edge on another table — it snaps flush.' : '');
+  tables.forEach(renderTable);
+}
+
+function toggleDelete() {
+  deleteMode = !deleteMode;
+  if (deleteMode) { attachMode = false; pendingEdge = null; document.getElementById('attachBtn').className = ''; document.getElementById('attachBtn').innerHTML = '<i class="ti ti-link"></i> Link tables'; }
+  document.getElementById('deleteBtn').className = deleteMode ? 'danger-active' : '';
+  document.getElementById('deleteBtn').innerHTML = deleteMode ? '<i class="ti ti-trash"></i> Cancel delete' : '<i class="ti ti-trash"></i> Delete table';
+  setHint(deleteMode ? 'Click any table to delete it.' : '');
+  tables.forEach(renderTable);
+}
+
+function clickEdge(tid, side) {
+  if (!pendingEdge) { pendingEdge = {tid, side}; renderTable(tables.find(t=>t.id===tid)); return; }
+  if (pendingEdge.tid === tid) { pendingEdge = null; tables.forEach(renderTable); return; }
+  const t1 = tables.find(t=>t.id===pendingEdge.tid), t2 = tables.find(t=>t.id===tid);
+  const side1 = pendingEdge.side, side2 = side;
+  t1.links[side1] = true; t2.links[side2] = true;
+  t1.linkedTo.push({otherId:t2.id, mySide:side1, otherSide:side2});
+  t2.linkedTo.push({otherId:t1.id, mySide:side2, otherSide:side1});
+  snapTable(t1, side1, t2, side2);
+  pendingEdge = null;
+  tables.forEach(renderTable);
+  scheduleSave();
+}
+
+// ─── Guest modal ──────────────────────────────────────────────────────────────
+function openModal(tid, key) {
+  if (deleteMode) return;
+  pendingModal = {tid, key};
+  const t = tables.find(x=>x.id===tid);
+  document.getElementById('guestInput').value = t.seats[key] || '';
+  document.getElementById('modal').classList.add('open');
+  setTimeout(()=>document.getElementById('guestInput').focus(), 50);
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); pendingModal = null; }
+function saveGuest() {
+  if (!pendingModal) return;
+  const t = tables.find(x=>x.id===pendingModal.tid);
+  const v = document.getElementById('guestInput').value.trim();
+  if (v) t.seats[pendingModal.key] = v; else delete t.seats[pendingModal.key];
+  closeModal();
+  renderTable(t);
+  scheduleSave();
+}
+document.getElementById('guestInput').addEventListener('keydown', e => { if(e.key==='Enter') saveGuest(); if(e.key==='Escape') closeModal(); });
+document.getElementById('modal').addEventListener('click', e => { if(e.target===document.getElementById('modal')) closeModal(); });
+
+// ─── Connectors ───────────────────────────────────────────────────────────────
+function rectEdgeCentre(t, side) {
+  const {rectX, rectY, rectW, rectH} = tableSize(t);
+  const cx = t.x+rectX+rectW/2, cy = t.y+rectY+rectH/2;
+  if (side==='top')    return {x:cx, y:t.y+rectY};
+  if (side==='bottom') return {x:cx, y:t.y+rectY+rectH};
+  if (side==='left')   return {x:t.x+rectX, y:cy};
+  if (side==='right')  return {x:t.x+rectX+rectW, y:cy};
+}
+function updateConnectors() {
+  const svg = document.getElementById('connectorSvg');
+  svg.innerHTML = '';
+  const drawn = new Set();
+  let maxX = 700, maxY = 500;
+  tables.forEach(t => {
+    const {totalW, totalH} = tableSize(t);
+    maxX = Math.max(maxX, t.x+totalW+40); maxY = Math.max(maxY, t.y+totalH+40);
+    (t.linkedTo||[]).forEach(l => {
+      const key = [t.id,l.otherId].sort().join('-');
+      if (drawn.has(key)) return; drawn.add(key);
+      const other = tables.find(x=>x.id===l.otherId); if (!other) return;
+      const p1 = rectEdgeCentre(t,l.mySide), p2 = rectEdgeCentre(other,l.otherSide);
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',p1.x); line.setAttribute('y1',p1.y);
+      line.setAttribute('x2',p2.x); line.setAttribute('y2',p2.y);
+      line.setAttribute('stroke','rgba(180,160,100,0.6)'); line.setAttribute('stroke-width','2'); line.setAttribute('stroke-dasharray','4 3');
+      svg.appendChild(line);
+    });
+  });
+  document.getElementById('canvas').style.minHeight = maxY+'px';
+  svg.setAttribute('width', maxX); svg.setAttribute('height', maxY);
+}
+
+// ─── Drag (moves linked cluster together) ────────────────────────────────────
+function getLinkedGroup(startId) {
+  const visited = new Set([startId]), queue = [startId];
+  while (queue.length) {
+    const cur = queue.shift();
+    const t = tables.find(x=>x.id===cur); if (!t) continue;
+    (t.linkedTo||[]).forEach(l => { if (!visited.has(l.otherId)) { visited.add(l.otherId); queue.push(l.otherId); } });
+  }
+  return [...visited];
+}
+function makeDraggable(el, t) {
+  el.addEventListener('mousedown', e => {
+    if (deleteMode) return;
+    if (['BUTTON','INPUT'].includes(e.target.tagName)||e.target.classList.contains('seat')||e.target.classList.contains('edge-btn')||e.target.tagName==='I') return;
+    e.preventDefault();
+    const group = getLinkedGroup(t.id);
+    const origins = {};
+    group.forEach(id => { const tb=tables.find(x=>x.id===id); origins[id]={ox:e.clientX-tb.x, oy:e.clientY-tb.y}; });
+    const mv = ev => {
+      group.forEach(id => { const tb=tables.find(x=>x.id===id); tb.x=Math.max(0,ev.clientX-origins[id].ox); tb.y=Math.max(0,ev.clientY-origins[id].oy); const el2=document.getElementById('tg-'+id); if(el2){el2.style.left=tb.x+'px';el2.style.top=tb.y+'px';} }); updateConnectors();
+    };
+    const up = () => { document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); scheduleSave(); };
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  });
+}
+
+// ─── Persistence (shared storage) ────────────────────────────────────────────
+function stateToJSON() {
+  return JSON.stringify({ count, tables });
+}
+
+function stateFromJSON(json) {
+  try {
+    const d = JSON.parse(json);
+    tables.forEach(t => { const el=document.getElementById('tg-'+t.id); if(el) el.remove(); });
+    tables = d.tables || [];
+    count  = d.count  || 0;
+    tables.forEach(renderTable);
+    updateConnectors();
+  } catch(e) { console.error('State parse error', e); }
+}
+
+function setSyncStatus(status, text) {
+  const dot = document.getElementById('syncDot');
+  dot.className = 'sync-dot ' + status;
+  document.getElementById('syncLabel').textContent = text;
+}
+
+async function saveState() {
+  const json = stateToJSON();
+  if (json === lastSavedHash) return; // nothing changed
+  setSyncStatus('saving', 'Saving…');
+  try {
+    await window.storage.set(STORAGE_KEY, json, true); // shared: true
+    lastSavedHash = json;
+    const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    setSyncStatus('saved', 'Saved at ' + now);
+  } catch(e) {
+    setSyncStatus('error', 'Save failed — check connection');
+    console.error('Save error', e);
+  }
+}
+
+async function pullState() {
+  setSyncStatus('saving', 'Syncing…');
+  try {
+    const result = await window.storage.get(STORAGE_KEY, true); // shared: true
+    if (result && result.value) {
+      const incoming = result.value;
+      if (incoming !== lastSavedHash) {
+        stateFromJSON(incoming);
+        lastSavedHash = incoming;
+        const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        setSyncStatus('saved', 'Synced at ' + now);
+      } else {
+        setSyncStatus('saved', 'Already up to date');
+      }
+    } else {
+      setSyncStatus('saved', 'No saved plan yet — start adding tables');
+    }
+  } catch(e) {
+    setSyncStatus('error', 'Sync failed — check connection');
+    console.error('Sync error', e);
+  }
+}
+
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 800); // debounce 800ms
+}
+
+// Auto-sync every 30s
+setInterval(pullState, SYNC_INTERVAL);
+
+// Load on start
+pullState();
+</script>
+</body>
+</html>
